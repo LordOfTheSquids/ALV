@@ -29,22 +29,31 @@ void TaskTurnLeft(float angle);
 void TaskTurnRight(float angle);
 void TaskDropOneBin();
 int GetCoordinates(int height, float* x, float* y);
-void TaskTurnCircle(float radius, float fraction, char direction);
-float Reset(float x_coor, float y_coor);
+void TaskTurnCircle(float radius, float angle, char direction);
+float Reset(float x_coor, float y_coor, float* x, float* y);
 void TaskBeaconSearch();
 void TaskBeep(int numBeeps);
 void TaskDriveBackward(float distance, int power);
+void TaskTurnEncoder(float angle);
 task main()
 {
 float angle = 0.0;
-angle = Reset(135, 15);
-TaskTurnLeft(90 + angle);
-TaskDriveForward(72, 80);
-TaskBeep(4);
-TaskDriveBackward(72, 80);
-TaskTurnLeft(90);
-TaskDriveForward(110, 80);
-TaskBeep(3);
+float x = 0.0;
+float y = 0.0;
+float temp_x = 0.0;
+float temp_y = 0.0;
+angle = Reset(135, 25, &x, &y);
+temp_x = x;
+temp_y = y;
+TaskTurnEncoder(-angle);
+angle = Reset(135, 75, &x, &y);
+TaskTurnEncoder(-angle);
+angle = Reset(135, 15, &x, &y);
+TaskTurnEncoder(-angle);
+while (True) {
+	angle = Reset(temp_x, temp_y, &x, &y);
+	TaskTurnEncoder(-angle);
+}
 }
 void TaskDriveForward(float distance, int power)
 {
@@ -274,38 +283,52 @@ int GetCoordinates(int height, float* x, float* y) {
   eraseDisplay();
   return state;
 }
-float Reset(float x_coor, float y_coor){
-	float x = 0.0;
-  float y = 0.0;
+float Reset(float x_coor, float y_coor, float* x, float* y){
+  float x_dim = 0.0;
+  float y_dim = 0.0;
   float dx = 0.0;
   float dy = 0.0;
   float angle = 0.0;
   float distance = 0.0;
   int state = 0;
+  x_dim = *x;
+  y_dim = *y;
   while (state == 0) {
-    state = GetCoordinates(50, &x, &y);
+    state = GetCoordinates(50, &x_dim, &y_dim);
     if (state == 0) {
     	wait(5);
     }
   }
-  dx = x_coor - x / 10.0;
-  dy = y / 10.0 - y_coor;
+  *x = x_dim / 10.0;
+  *y = y_dim / 10.0;
+  dx = x_coor - x_dim / 10.0;
+  dy = y_dim / 10.0 - y_coor;
   angle = atan(dy / dx);
-  distance = sqrt(pow(dx, 2.0) + pow(dy, 2.0));
+  distance = sqrt(pow(dx, 2.0) + pow(dy, 2.0)) + 7.0;
   angle = angle * (180 / PI);
+  if (dx < 0) {
+  	angle = angle + 180;
+  }
   nxtDisplayString(1, "Angle = %.02lf", angle);
   nxtDisplayString(2, "Distance = %.02lf", distance);
   wait(1);
   eraseDisplay();
-  TaskTurnRight(angle);
-  TaskDriveForward(distance, 80);
+  if (abs(angle) > 2.0) {
+    TaskTurnEncoder(angle);
+  }
+  TaskDriveForward(distance, 110);
   return angle;
 }
-void TaskTurnCircle(float radius, float fraction, char direction) {
+void TaskTurnCircle(float radius, float angle, char direction) {
   float ratio = 0.0;
   float distance = 0.0;
-  distance = ((radius + 0.5 * 6.78) * fraction * PI);
-  distance =  (distance + 2.54) / .0235;
+  float const radiusALV = 6.78;
+  float const diamWheel = 8.274; // cm
+	float const gearRatio = 0.333;
+	nMotorEncoder[MOTOR_PORT_LEFT] = 0;
+	nMotorEncoder[MOTOR_PORT_RIGHT] = 0;
+  distance =  (2.0 * (angle) * (radius + radiusALV - 2.0 / radius)) / (diamWheel * gearRatio);
+  radius = radius * .75;
   if (direction == 'R') {
   	while (nMotorEncoder[MOTOR_PORT_LEFT] < distance) {
   	  ratio = (radius + 6.78) / (radius - 6.78);
@@ -314,7 +337,7 @@ void TaskTurnCircle(float radius, float fraction, char direction) {
   	}
   }
   else {
-  	while (nMotorEncoder[MOTOR_PORT_LEFT] < distance) {
+  	while (nMotorEncoder[MOTOR_PORT_RIGHT] < distance) {
   		ratio = (radius + 6.78) / (radius - 6.78);
   		motor[MOTOR_PORT_RIGHT] = 80 * ratio;
   		motor[MOTOR_PORT_LEFT] = 80 / ratio;
@@ -376,4 +399,60 @@ void TaskBeep(int numBeeps) {
 	  numBeeps = numBeeps - 1;
 	}
   // do not continue until finished playing sound
+}
+void TaskTurnEncoder(float angle) {
+	/* Declare and initialize constants and variables */
+	float const radiusALV = 6.913; // cm
+	float const diamWheel = 8.274; // cm
+	float const gearRatio = 0.333;
+	float const startMotor = 20.0;
+	float const offset = (8.0 / 90.0) * abs(angle);
+	float delta = 0.0;
+	float ticks = 0.0;
+	float direction = 0.0;
+	float targetTicks = 0.0;
+
+	/* Reset encoders and calculate target ticks */
+  nMotorEncoder[MOTOR_PORT_LEFT] = 0;
+  nMotorEncoder[MOTOR_PORT_RIGHT] = 0;
+  direction = angle / abs(angle);
+  targetTicks = (2.0 * (abs(angle) + offset) * radiusALV) / (diamWheel * gearRatio);
+
+	/* Turning algorithm to ramp motor power linearly based on time */
+	ticks = 0.0;
+	delta = 0.0;
+	while (ticks < targetTicks) {
+		motor[MOTOR_PORT_LEFT] = (startMotor + delta) * direction;
+  	motor[MOTOR_PORT_RIGHT] = -(startMotor + delta) * direction;
+
+  	/* First Half: Ramping up */
+		if (ticks < 0.5 * targetTicks) {
+  		if (delta < 60) {
+  			delta += 0.5;
+  		}
+  		else {
+  			delta = 60;
+  		}
+  	}
+  	/* Second Half: Ramping down */
+  	else {
+  		if (delta > 0) {
+  			delta -= 0.5;
+  		}
+  		else {
+  			delta = 0;
+  		}
+  	}
+  	/* Wait and find avaerage ticks between encoders */
+  	wait1Msec(25);
+  	ticks = (abs(nMotorEncoder[MOTOR_PORT_LEFT])
+	         + abs(nMotorEncoder[MOTOR_PORT_RIGHT])) / 2;
+  }
+  /* Motor powers to zero and reset encoders */
+  motor[MOTOR_PORT_LEFT] = 0;
+  motor[MOTOR_PORT_RIGHT] = 0;
+  nMotorEncoder[MOTOR_PORT_LEFT] = 0;
+	nMotorEncoder[MOTOR_PORT_RIGHT] = 0;
+
+  return;
 }
