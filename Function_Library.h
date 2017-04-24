@@ -23,7 +23,8 @@
 #define MOTOR_PORT_RIGHT motorB
 #define BIN_MOTOR motorA
 #define PI (4.0 * atan(1.0))
-void TaskDriveForward(float distance, int power);
+void TaskDriveForward(float distance, float gSpeed);
+void TaskDriveX(float distance, float power);
 void TaskTurnLeft(float angle);
 void TaskTurnRight(float angle);
 void TaskDropOneBin();
@@ -34,50 +35,51 @@ void TaskBeaconSearch();
 void TaskBeep(int numBeeps);
 void TaskDriveBackward(float distance, int power);
 void TaskTurnEncoder(float angle);
-void TaskDriveForward(float distance, int power)
+//void PIDControl(float distance, float gSpeed);
+void TaskDriveX(float distance, int power)
 {
 	int encoder_left = 0;
-  int encoder_right = 0;
-  nMotorEncoder[MOTOR_PORT_LEFT] = 0;
+	int encoder_right = 0;
+	nMotorEncoder[MOTOR_PORT_LEFT] = 0;
 	nMotorEncoder[MOTOR_PORT_RIGHT] = 0;
-  distance = (distance + 2.54) / .0256;
+	distance = (distance + 2.54) / .0256;
 	// Start by driving both motors at same speed
 	// A static integer is initialised only the first
 	// time this code is executed, then keeps its
 	// value until changed.
 	while (nMotorEncoder[MOTOR_PORT_LEFT] < distance) {
-    encoder_left  = nMotorEncoder[MOTOR_PORT_LEFT];
-  	encoder_right = nMotorEncoder[MOTOR_PORT_RIGHT];
-	  static int state = 0;
+		encoder_left  = nMotorEncoder[MOTOR_PORT_LEFT];
+		encoder_right = nMotorEncoder[MOTOR_PORT_RIGHT];
+		static int state = 0;
 
-	  switch (state)
-	  {
-	  case 0:  // going straight
-		  motor[MOTOR_PORT_LEFT]= power;
-		  motor[MOTOR_PORT_RIGHT]= power;
-		  displayText(4, "FWD");
-		  break;
+		switch (state)
+		{
+		case 0:  // going straight
+			motor[MOTOR_PORT_LEFT]= power;
+			motor[MOTOR_PORT_RIGHT]= power;
+			displayText(4, "FWD");
+			break;
 
-	  case 1:   // drifting to the right
-		  motor[MOTOR_PORT_LEFT]= power - 20;
-		  motor[MOTOR_PORT_RIGHT]= power + 10;
-		  nxtDisplayString(4, "LEFT");
-		  break;
+		case 1:   // drifting to the right
+			motor[MOTOR_PORT_LEFT]= power - 20;
+			motor[MOTOR_PORT_RIGHT]= power + 10;
+			nxtDisplayString(4, "LEFT");
+			break;
 
-	  case 2:     // drifting to the left
-		  motor[MOTOR_PORT_LEFT]= power;
-		  motor[MOTOR_PORT_RIGHT]= power - 20;
-		  nxtDisplayString(4, "RIGHT");
-		  break;
-	  } // end switch
+		case 2:     // drifting to the left
+			motor[MOTOR_PORT_LEFT]= power;
+			motor[MOTOR_PORT_RIGHT]= power - 20;
+			nxtDisplayString(4, "RIGHT");
+			break;
+		} // end switch
 
-	// Read Motor Encoders and chose next movement
-	  if (nMotorEncoder[MOTOR_PORT_LEFT] == nMotorEncoder[MOTOR_PORT_RIGHT])  { state = 0; }  // Go straight
-	  else if (nMotorEncoder[MOTOR_PORT_LEFT] > nMotorEncoder[MOTOR_PORT_RIGHT])  { state = 1; } // Turn left
-	  else if (nMotorEncoder[MOTOR_PORT_LEFT] < nMotorEncoder[MOTOR_PORT_RIGHT])  { state = 2; } // Turn right
-	  //nxtDisplayString(1, "L rot cnt: %i", encoder_left);
+		// Read Motor Encoders and chose next movement
+		if (nMotorEncoder[MOTOR_PORT_LEFT] == nMotorEncoder[MOTOR_PORT_RIGHT])  { state = 0; }  // Go straight
+		else if (nMotorEncoder[MOTOR_PORT_LEFT] > nMotorEncoder[MOTOR_PORT_RIGHT])  { state = 1; } // Turn left
+		else if (nMotorEncoder[MOTOR_PORT_LEFT] < nMotorEncoder[MOTOR_PORT_RIGHT])  { state = 2; } // Turn right
+		//nxtDisplayString(1, "L rot cnt: %i", encoder_left);
 		//nxtDisplayString(2, "R rot cnt: %i", encoder_right);
-	  //wait1Msec(40);
+		//wait1Msec(40);
 		//eraseDisplay();
 	}
 	nMotorEncoder[MOTOR_PORT_LEFT] = 0;
@@ -90,47 +92,47 @@ void TaskDriveForward(float distance, int power)
 void TaskDriveBackward(float distance, int power)
 {
 	int encoder_left = 0;
-  int encoder_right = 0;
-  nMotorEncoder[MOTOR_PORT_LEFT] = 0;
+	int encoder_right = 0;
+	nMotorEncoder[MOTOR_PORT_LEFT] = 0;
 	nMotorEncoder[MOTOR_PORT_RIGHT] = 0;
-  distance = (distance + 2.54) / .0256;
+	distance = (distance + 2.54) / .0256;
 	// Start by driving both motors at same speed
 	// A static integer is initialised only the first
 	// time this code is executed, then keeps its
 	// value until changed.
 	while (abs(nMotorEncoder[MOTOR_PORT_LEFT]) < distance) {
-    encoder_left  = nMotorEncoder[MOTOR_PORT_LEFT];
-  	encoder_right = nMotorEncoder[MOTOR_PORT_RIGHT];
-	  static int state = 0;
+		encoder_left  = nMotorEncoder[MOTOR_PORT_LEFT];
+		encoder_right = nMotorEncoder[MOTOR_PORT_RIGHT];
+		static int state = 0;
 
-	  switch (state)
-	  {
-	  case 0:  // going straight
-		  motor[MOTOR_PORT_LEFT]= -power;
-		  motor[MOTOR_PORT_RIGHT]= -power;
-		  displayText(4, "FWD");
-		  break;
+		switch (state)
+		{
+		case 0:  // going straight
+			motor[MOTOR_PORT_LEFT]= -power;
+			motor[MOTOR_PORT_RIGHT]= -power;
+			displayText(4, "FWD");
+			break;
 
-	  case 1:   // drifting to the right
-		  motor[MOTOR_PORT_LEFT]= -(power - 20);
-		  motor[MOTOR_PORT_RIGHT]= -(power + 10);
-		  nxtDisplayString(4, "LEFT");
-		  break;
+		case 1:   // drifting to the right
+			motor[MOTOR_PORT_LEFT]= -(power - 20);
+			motor[MOTOR_PORT_RIGHT]= -(power + 10);
+			nxtDisplayString(4, "LEFT");
+			break;
 
-	  case 2:     // drifting to the left
-		  motor[MOTOR_PORT_LEFT]= -power;
-		  motor[MOTOR_PORT_RIGHT]= -(power - 20);
-		  nxtDisplayString(4, "RIGHT");
-		  break;
-	  } // end switch
+		case 2:     // drifting to the left
+			motor[MOTOR_PORT_LEFT]= -power;
+			motor[MOTOR_PORT_RIGHT]= -(power - 20);
+			nxtDisplayString(4, "RIGHT");
+			break;
+		} // end switch
 
-	// Read Motor Encoders and chose next movement
-	  if (abs(nMotorEncoder[MOTOR_PORT_LEFT]) == abs(nMotorEncoder[MOTOR_PORT_RIGHT]))  { state = 0; }  // Go straight
-	  else if (abs(nMotorEncoder[MOTOR_PORT_LEFT]) > abs(nMotorEncoder[MOTOR_PORT_RIGHT]))  { state = 1; } // Turn left
-	  else if (abs(nMotorEncoder[MOTOR_PORT_LEFT]) < abs(nMotorEncoder[MOTOR_PORT_RIGHT]))  { state = 2; } // Turn right
-	  nxtDisplayString(1, "L rot cnt: %i", encoder_left);
+		// Read Motor Encoders and chose next movement
+		if (abs(nMotorEncoder[MOTOR_PORT_LEFT]) == abs(nMotorEncoder[MOTOR_PORT_RIGHT]))  { state = 0; }  // Go straight
+		else if (abs(nMotorEncoder[MOTOR_PORT_LEFT]) > abs(nMotorEncoder[MOTOR_PORT_RIGHT]))  { state = 1; } // Turn left
+		else if (abs(nMotorEncoder[MOTOR_PORT_LEFT]) < abs(nMotorEncoder[MOTOR_PORT_RIGHT]))  { state = 2; } // Turn right
+		nxtDisplayString(1, "L rot cnt: %i", encoder_left);
 		nxtDisplayString(2, "R rot cnt: %i", encoder_right);
-	  wait1Msec(40);
+		wait1Msec(40);
 		eraseDisplay();
 	}
 	nMotorEncoder[MOTOR_PORT_LEFT] = 0;
@@ -142,51 +144,51 @@ void TaskDriveBackward(float distance, int power)
 }
 void TaskTurnLeft(float angle) {
 	float encoder_left = 0;
-  float encoder_right = 0;
-  angle = angle * 4.65  + 9.33;
-  nmotorEncoder[MOTOR_PORT_LEFT] = 0;
-  nMotorEncoder[MOTOR_PORT_RIGHT] = 0;
-  while (abs(encoder_left) < angle) {
-  	encoder_left  = nMotorEncoder[MOTOR_PORT_LEFT];
-  	encoder_right = nMotorEncoder[MOTOR_PORT_RIGHT];
-    motor[MOTOR_PORT_LEFT] = -80;
-  	motor[MOTOR_PORT_RIGHT] = 80;
-  	nxtDisplayString(1, "L rot cnt: %i", encoder_left);
+	float encoder_right = 0;
+	angle = angle * 4.65  + 9.33;
+	nmotorEncoder[MOTOR_PORT_LEFT] = 0;
+	nMotorEncoder[MOTOR_PORT_RIGHT] = 0;
+	while (abs(encoder_left) < angle) {
+		encoder_left  = nMotorEncoder[MOTOR_PORT_LEFT];
+		encoder_right = nMotorEncoder[MOTOR_PORT_RIGHT];
+		motor[MOTOR_PORT_LEFT] = -80;
+		motor[MOTOR_PORT_RIGHT] = 80;
+		nxtDisplayString(1, "L rot cnt: %i", encoder_left);
 		nxtDisplayString(2, "R rot cnt: %i", encoder_right);
 		wait1Msec(40);
 		eraseDisplay();
-  }
-  nMotorEncoder[MOTOR_PORT_LEFT] = 0;
+	}
+	nMotorEncoder[MOTOR_PORT_LEFT] = 0;
 	nMotorEncoder[MOTOR_PORT_RIGHT] = 0;
 	return;
 }
 void TaskTurnRight(float angle) {
 	float encoder_left = 0;
-  float encoder_right = 0;
-  nMotorEncoder[MOTOR_PORT_LEFT] = 0;
-  nMotorEncoder[MOTOR_PORT_RIGHT] = 0;
-  angle = angle * 4.65 + 9.33;
-  while (abs(encoder_right) < angle) {
-  	encoder_left  = nMotorEncoder[MOTOR_PORT_LEFT];
-  	encoder_right = nMotorEncoder[MOTOR_PORT_RIGHT];
-  	motor[MOTOR_PORT_LEFT] = 80;
-  	motor[MOTOR_PORT_RIGHT] = -80;
-  	nxtDisplayString(1, "L rot cnt: %i", encoder_left);
+	float encoder_right = 0;
+	nMotorEncoder[MOTOR_PORT_LEFT] = 0;
+	nMotorEncoder[MOTOR_PORT_RIGHT] = 0;
+	angle = angle * 4.65 + 9.33;
+	while (abs(encoder_right) < angle) {
+		encoder_left  = nMotorEncoder[MOTOR_PORT_LEFT];
+		encoder_right = nMotorEncoder[MOTOR_PORT_RIGHT];
+		motor[MOTOR_PORT_LEFT] = 80;
+		motor[MOTOR_PORT_RIGHT] = -80;
+		nxtDisplayString(1, "L rot cnt: %i", encoder_left);
 		nxtDisplayString(2, "R rot cnt: %i", encoder_right);
 		wait1Msec(40);
 		eraseDisplay();
-  }
-  nMotorEncoder[MOTOR_PORT_LEFT] = 0;
+	}
+	nMotorEncoder[MOTOR_PORT_LEFT] = 0;
 	nMotorEncoder[MOTOR_PORT_RIGHT] = 0;
-  motor[MOTOR_PORT_LEFT] = 0;
-  motor[MOTOR_PORT_RIGHT] = 0;
+	motor[MOTOR_PORT_LEFT] = 0;
+	motor[MOTOR_PORT_RIGHT] = 0;
 	return;
 }
 void TaskDropOneBin()
 {
 	int encoder_next = 0;
-  int encoder_bin = 1;
-  motor[MOTOR_PORT_LEFT] = 0;
+	int encoder_bin = 1;
+	motor[MOTOR_PORT_LEFT] = 0;
 	motor[MOTOR_PORT_RIGHT] = 0;
 	while ((sensorValue[Touch]) == 0) {
 		encoder_bin = nMotorEncoder[BIN_MOTOR];
@@ -204,192 +206,193 @@ void TaskDropOneBin()
 	return;
 }
 int GetCoordinates(int height, float* x, float* y) {
-  int x_coor = 0;
-  int y_coor = 0;
-  short i = 0;
-  int value = 0;
-  int state = 0;
-  ClearMessage();
-  sendMessage(height);
-  while (message == 0) {
-	  nxtDisplayString(1, "Waiting for message");
-	  wait1Msec(40);
-	  eraseDisplay();
-  }
-  nxtDisplayString(1, "Message Recieved");
-  //wait(3);
-  eraseDisplay();
-  value = messageParm[0];
-  for(i = 1 ; i <= 32; i *= 2) {
-	  switch (i & value) {
-	  	case (1) :
-	  	  nxtDisplayString(1,"No error");
-	  	  state = 1;
-	  	  break;
-	  	case (2) :
-	  	  nxtDisplayString(1,"Error: MO");
-	  	  state = 1;
-	  	  break;
-	  	case (4) :
-	  	  nxtDisplayString(2,"Error: OB XY INV");
-	  	  state = 0;
-	  	  break;
-	  	case (8) :
-	  	  nxtDisplayString(3,"Error: NM XY INV");
-	  	  state = 0;
-	  	  break;
-	  	case (16):
-	  	  nxtDisplayString(4,"Error: SE XY INV");
-	  	  state = 0;
-	  	  break;
-	  	case (32):
-	  	  nxtDisplayString(5,"Busy XY INV");
-	  	  state = 0;
-	  	  break;
-	  	}
-	  }
-  //wait(3);
-  eraseDisplay();
-  nxtDisplayString(1, "%i", messageParm[0]);
-  *x = messageParm[1];
-  *y = messageParm[2];
-  x_coor = messageParm[1];
-  y_coor = messageParm[2];
-  ClearMessage();
-  nxtDisplayString(1, "x = %i", x_coor);
-  nxtDisplayString(2, "y = %i", y_coor);
-  //wait(3);
-  eraseDisplay();
-  return state;
+	int x_coor = 0;
+	int y_coor = 0;
+	short i = 0;
+	int value = 0;
+	int state = 0;
+	ClearMessage();
+	sendMessage(height);
+	while (message == 0) {
+		nxtDisplayString(1, "Waiting for message");
+		wait1Msec(40);
+		eraseDisplay();
+	}
+	nxtDisplayString(1, "Message Recieved");
+	//wait(3);
+	eraseDisplay();
+	value = messageParm[0];
+	for(i = 1 ; i <= 32; i *= 2) {
+		switch (i & value) {
+		case (1) :
+			nxtDisplayString(1,"No error");
+			state = 1;
+			break;
+		case (2) :
+			nxtDisplayString(1,"Error: MO");
+			state = 1;
+			break;
+		case (4) :
+			nxtDisplayString(2,"Error: OB XY INV");
+			state = 0;
+			break;
+		case (8) :
+			nxtDisplayString(3,"Error: NM XY INV");
+			state = 0;
+			break;
+		case (16):
+			nxtDisplayString(4,"Error: SE XY INV");
+			state = 0;
+			break;
+		case (32):
+			nxtDisplayString(5,"Busy XY INV");
+			state = 0;
+			break;
+		}
+	}
+	//wait(3);
+	eraseDisplay();
+	nxtDisplayString(1, "%i", messageParm[0]);
+	*x = messageParm[1];
+	*y = messageParm[2];
+	x_coor = messageParm[1];
+	y_coor = messageParm[2];
+	ClearMessage();
+	ClearMessage();
+	nxtDisplayString(1, "x = %i", x_coor);
+	nxtDisplayString(2, "y = %i", y_coor);
+	//wait(3);
+	eraseDisplay();
+	return state;
 }
 float Reset(float x_coor, float y_coor, float* x, float* y){
-  float x_dim = 0.0;
-  float y_dim = 0.0;
-  float dx = 0.0;
-  float dy = 0.0;
-  float angle = 0.0;
-  float distance = 0.0;
-  int state = 0;
-  x_dim = *x;
-  y_dim = *y;
-  while (state == 0) {
-    state = GetCoordinates(50, &x_dim, &y_dim);
-    if (state == 0) {
-    	wait(1);
-    }
-  }
-  *x = x_dim / 10.0;
-  *y = y_dim / 10.0;
-  dx = x_coor - x_dim / 10.0;
-  dy = y_dim / 10.0 - y_coor;
-  if (abs(dx) < 0.001) {
-  	if (abs(dy) < 0.001) {
-      TaskBeep(3);
-      distance = 0;
-    }
-    else {
-  	  angle = 90 * (dy / abs(dy));
-  	  distance = sqrt(pow(dx, 2.0) + pow(dy, 2.0));
-  	}
-  }
-  else{
-    angle = atan(dy / dx);
-    angle = angle * (180.0 / PI);
-    distance = sqrt(pow(dx, 2.0) + pow(dy, 2.0));
-  }
-  if (dx < 0) {
-  	angle = angle + 180;
-  }
-  //nxtDisplayString(1, "Angle = %.02lf", angle);
-  //nxtDisplayString(2, "Distance = %.02lf", distance);
-  //wait(1);
-  //eraseDisplay();
-  if (abs(angle) > 2.0) {
-    TaskTurnEncoder(angle);
-  }
-  TaskDriveForward(distance, 80);
-  return angle;
+	float x_dim = 0.0;
+	float y_dim = 0.0;
+	float dx = 0.0;
+	float dy = 0.0;
+	float angle = 0.0;
+	float distance = 0.0;
+	int state = 0;
+	x_dim = *x;
+	y_dim = *y;
+	while (state == 0) {
+		state = GetCoordinates(260, &x_dim, &y_dim);
+		if (state == 0) {
+			wait(1);
+		}
+	}
+	*x = x_dim / 10.0;
+	*y = y_dim / 10.0;
+	dx = x_coor - x_dim / 10.0;
+	dy = y_dim / 10.0 - y_coor;
+	if (abs(dx) < 0.001) {
+		if (abs(dy) < 0.001) {
+			TaskBeep(3);
+			distance = 0;
+		}
+		else {
+			angle = 90 * (dy / abs(dy));
+			distance = sqrt(pow(dx, 2.0) + pow(dy, 2.0));
+		}
+	}
+	else{
+		angle = atan(dy / dx);
+		angle = angle * (180.0 / PI);
+		distance = sqrt(pow(dx, 2.0) + pow(dy, 2.0));
+	}
+	if (dx < 0) {
+		angle = angle + 180;
+	}
+	//nxtDisplayString(1, "Angle = %.02lf", angle);
+	//nxtDisplayString(2, "Distance = %.02lf", distance);
+	//wait(1);
+	//eraseDisplay();
+	if (abs(angle) > 2.0) {
+		TaskTurnEncoder(angle);
+	}
+	TaskDriveForward(distance, 80);
+	return angle;
 }
 void TaskTurnCircle(float radius, float angle, char direction) {
-  float ratio = 0.0;
-  float distance = 0.0;
-  float const radiusALV = 6.78;
-  float const diamWheel = 8.274; // cm
+	float ratio = 0.0;
+	float distance = 0.0;
+	float const radiusALV = 6.78;
+	float const diamWheel = 8.274; // cm
 	float const gearRatio = 0.333;
 	nMotorEncoder[MOTOR_PORT_LEFT] = 0;
 	nMotorEncoder[MOTOR_PORT_RIGHT] = 0;
-  distance =  (2.0 * (angle) * (radius + radiusALV - 2.0 / radius)) / (diamWheel * gearRatio);
-  radius = radius * .75;
-  if (direction == 'R') {
-  	while (nMotorEncoder[MOTOR_PORT_LEFT] < distance) {
-  	  ratio = (radius + 6.78) / (radius - 6.78);
-  		motor[MOTOR_PORT_LEFT] = 80 * ratio;
-  		motor[MOTOR_PORT_RIGHT] = 80 / ratio;
-  	}
-  }
-  else {
-  	while (nMotorEncoder[MOTOR_PORT_RIGHT] < distance) {
-  		ratio = (radius + 6.78) / (radius - 6.78);
-  		motor[MOTOR_PORT_RIGHT] = 80 * ratio;
-  		motor[MOTOR_PORT_LEFT] = 80 / ratio;
-  	}
-  }
-  motor[MOTOR_PORT_LEFT] = 0;
-  motor[MOTOR_PORT_RIGHT] = 0;
+	distance =  (2.0 * (angle) * (radius + radiusALV - 2.0 / radius)) / (diamWheel * gearRatio);
+	radius = radius * .75;
+	if (direction == 'R') {
+		while (nMotorEncoder[MOTOR_PORT_LEFT] < distance) {
+			ratio = (radius + 6.78) / (radius - 6.78);
+			motor[MOTOR_PORT_LEFT] = 80 * ratio;
+			motor[MOTOR_PORT_RIGHT] = 80 / ratio;
+		}
+	}
+	else {
+		while (nMotorEncoder[MOTOR_PORT_RIGHT] < distance) {
+			ratio = (radius + 6.78) / (radius - 6.78);
+			motor[MOTOR_PORT_RIGHT] = 80 * ratio;
+			motor[MOTOR_PORT_LEFT] = 80 / ratio;
+		}
+	}
+	motor[MOTOR_PORT_LEFT] = 0;
+	motor[MOTOR_PORT_RIGHT] = 0;
 }
 void TaskBeaconSearch() {
- int state = 1;
- motor[MOTOR_PORT_LEFT] = 0;
- motor[MOTOR_PORT_RIGHT] = 0;
- while (state) {
-    int sensorVal = 0;
-  	sensorVal = SensorValue[HALL_EFFECT];
-  	motor[MOTOR_PORT_LEFT] = 50;
-  	motor[MOTOR_PORT_RIGHT] = 50;
-    nxtDisplayString(1, "HALL VALUE: %d", sensorVal);
-    if (sensorVal < 469) {
-    	nxtDisplayString(2, "BEACON DETECTED. PERFORMING SEARCH.");
-    	wait1Msec(40);
-    	eraseDisplay();
-    	motor[MOTOR_PORT_LEFT] = 40;
-    	motor[MOTOR_PORT_RIGHT] = 40;
-    	nMotorEncoder[MOTOR_PORT_LEFT] = 0;
-    	while (nMotorEncoder[MOTOR_PORT_LEFT] < 411.7) {
-    		sensorVal = SensorValue[HALL_EFFECT];
-    		if (sensorVal > 600) {
-    			motor[MOTOR_PORT_LEFT] = 0;
-    			motor[MOTOR_PORT_RIGHT] = 0;
-    		  nxtDisplayString(1, "BEACON LOCATED!!! DROPPING BIN");
-    		  wait(1);
-    		  eraseDisplay();
-    		  TaskTurnRight(180);
-    		  TaskDropOneBin();
-    			state = 0;
-    		}
-    	}
-    	motor[MOTOR_PORT_LEFT] = 0;
-    	motor[MOTOR_PORT_RIGHT] = 0;
-    	nxtDisplayString(1, "NO BEACON FOUND! DROPPING");
-    	wait(1);
-    	eraseDisplay();
-      TaskTurnRight(180);
-      TaskDropOneBin();
-      TaskDriveForward(20, 80);
-    	state = 0;
-    }
-    wait1Msec(40);
-    eraseDisplay();
- }
+	int state = 1;
+	motor[MOTOR_PORT_LEFT] = 0;
+	motor[MOTOR_PORT_RIGHT] = 0;
+	while (state) {
+		int sensorVal = 0;
+		sensorVal = SensorValue[HALL_EFFECT];
+		motor[MOTOR_PORT_LEFT] = 50;
+		motor[MOTOR_PORT_RIGHT] = 50;
+		nxtDisplayString(1, "HALL VALUE: %d", sensorVal);
+		if (sensorVal < 469) {
+			nxtDisplayString(2, "BEACON DETECTED. PERFORMING SEARCH.");
+			wait1Msec(40);
+			eraseDisplay();
+			motor[MOTOR_PORT_LEFT] = 40;
+			motor[MOTOR_PORT_RIGHT] = 40;
+			nMotorEncoder[MOTOR_PORT_LEFT] = 0;
+			while (nMotorEncoder[MOTOR_PORT_LEFT] < 411.7) {
+				sensorVal = SensorValue[HALL_EFFECT];
+				if (sensorVal > 600) {
+					motor[MOTOR_PORT_LEFT] = 0;
+					motor[MOTOR_PORT_RIGHT] = 0;
+					nxtDisplayString(1, "BEACON LOCATED!!! DROPPING BIN");
+					wait(1);
+					eraseDisplay();
+					TaskTurnRight(180);
+					TaskDropOneBin();
+					state = 0;
+				}
+			}
+			motor[MOTOR_PORT_LEFT] = 0;
+			motor[MOTOR_PORT_RIGHT] = 0;
+			nxtDisplayString(1, "NO BEACON FOUND! DROPPING");
+			wait(1);
+			eraseDisplay();
+			TaskTurnRight(180);
+			TaskDropOneBin();
+			TaskDriveForward(20, 80);
+			state = 0;
+		}
+		wait1Msec(40);
+		eraseDisplay();
+	}
 }
 void TaskBeep(int numBeeps) {
 
-  while(numBeeps > 0)  // while a sound is actively playing:
-  {
-	  playSound(soundBlip);
-	  wait(1);
-	  numBeeps = numBeeps - 1;
+	while(numBeeps > 0)  // while a sound is actively playing:
+	{
+		playSound(soundBlip);
+		wait(1);
+		numBeeps = numBeeps - 1;
 	}
-  // do not continue until finished playing sound
+	// do not continue until finished playing sound
 }
 void TaskTurnEncoder(float angle) {
 	/* Declare and initialize constants and variables */
@@ -404,46 +407,135 @@ void TaskTurnEncoder(float angle) {
 	float targetTicks = 0.0;
 
 	/* Reset encoders and calculate target ticks */
-  nMotorEncoder[MOTOR_PORT_LEFT] = 0;
-  nMotorEncoder[MOTOR_PORT_RIGHT] = 0;
-  direction = angle / abs(angle);
-  targetTicks = (2.0 * (abs(angle) + offset) * radiusALV) / (diamWheel * gearRatio);
+	nMotorEncoder[MOTOR_PORT_LEFT] = 0;
+	nMotorEncoder[MOTOR_PORT_RIGHT] = 0;
+	if (fabs(angle) < 0.001) {
+		direction = 0.0;
+	}
+	else {
+		direction = angle / fabs(angle);
+	}
+	targetTicks = (2.0 * (abs(angle) + offset) * radiusALV) / (diamWheel * gearRatio);
 
 	/* Turning algorithm to ramp motor power linearly based on time */
 	ticks = 0.0;
 	delta = 0.0;
 	while (ticks < targetTicks) {
 		motor[MOTOR_PORT_LEFT] = (startMotor + delta) * direction;
-  	motor[MOTOR_PORT_RIGHT] = -(startMotor + delta) * direction;
+		motor[MOTOR_PORT_RIGHT] = -(startMotor + delta) * direction;
 
-  	/* First Half: Ramping up */
+		/* First Half: Ramping up */
 		if (ticks < 0.5 * targetTicks) {
-  		if (delta < 60) {
-  			delta += 0.5;
-  		}
-  		else {
-  			delta = 60;
-  		}
-  	}
-  	/* Second Half: Ramping down */
-  	else {
-  		if (delta > 0) {
-  			delta -= 0.5;
-  		}
-  		else {
-  			delta = 0;
-  		}
-  	}
-  	/* Wait and find avaerage ticks between encoders */
-  	wait1Msec(25);
-  	ticks = (abs(nMotorEncoder[MOTOR_PORT_LEFT])
-	         + abs(nMotorEncoder[MOTOR_PORT_RIGHT])) / 2;
-  }
-  /* Motor powers to zero and reset encoders */
-  motor[MOTOR_PORT_LEFT] = 0;
-  motor[MOTOR_PORT_RIGHT] = 0;
-  nMotorEncoder[MOTOR_PORT_LEFT] = 0;
+			if (delta < 60) {
+				delta += 0.5;
+			}
+			else {
+				delta = 60;
+			}
+		}
+		/* Second Half: Ramping down */
+		else {
+			if (delta > 0) {
+				delta -= 0.5;
+			}
+			else {
+				delta = 0;
+			}
+		}
+		/* Wait and find avaerage ticks between encoders */
+		wait1Msec(25);
+		ticks = (abs(nMotorEncoder[MOTOR_PORT_LEFT])
+		+ abs(nMotorEncoder[MOTOR_PORT_RIGHT])) / 2;
+	}
+	/* Motor powers to zero and reset encoders */
+	motor[MOTOR_PORT_LEFT] = 0;
+	motor[MOTOR_PORT_RIGHT] = 0;
+	nMotorEncoder[MOTOR_PORT_LEFT] = 0;
 	nMotorEncoder[MOTOR_PORT_RIGHT] = 0;
 
-  return;
+	return;
+}
+void TaskDriveForward(float distance, float gSpeed){
+	float l_pos = 0.0;
+	float r_pos = 0.0;
+	float dError = 0.0;
+	float aError = 0.0;
+	float aI = 0.0;
+	float dI = 0.0;
+	float dPGain = 0.0;
+	float aPGain = 0.0;
+	float dIGain = 0.0;
+	float aIGain = 0.0;
+	float iSpeed = 0.0;
+	float dD = 0.0;
+	float dDGain = 0.0;
+	float dPError = 0.0;
+	float aD = 0.0;
+	float aDGain = 0.0;
+	float aPError = 0.0;
+	float aOutput = 0.0;
+	float LmotorVal = 0.0;
+	float RmotorVal = 0.0;
+  nMotorEncoder[MOTOR_PORT_LEFT] = 0;
+	nMotorEncoder[MOTOR_PORT_RIGHT] = 0;
+  distance = distance + distance * 15.0 / 200.0;
+  dPGain = 0.005;
+  aPGain = 1.0;
+  dIGain = 0.000;
+  aIGain = 5.0;
+  aDGain = 5.0;
+  dDGain = 0.000;
+	while (((nMotorEncoder[MOTOR_PORT_LEFT])* 0.0256 -2.54) < distance){
+		l_pos = nMotorEncoder[MOTOR_PORT_LEFT]* 0.0256 -2.54;
+		r_pos = nMotorEncoder[MOTOR_PORT_RIGHT]* 0.0256 -2.54;
+		dError = gSpeed - LmotorVal;
+		aError = r_pos - l_pos;
+		dI = dI + dError * 0.01;
+		aI = aI + aError * 0.01;
+		dD = (dError - dPError) / 0.01;
+		aD = (aError - aPError) / 0.01;
+		iSpeed = dError * dPGain + dI * dIGain + dD * dDGain;
+		aOutput = aError * aPGain + aI * aIGain + aD * aDGain;
+		dPError = dError;
+		aPError = aError;
+		LmotorVal = LmotorVal + iSpeed + aOutput;
+		RmotorVal = RmotorVal + iSpeed;
+		nxtDisplayString(1, "iSpeed: %lf", iSpeed);
+		motor[MOTOR_PORT_LEFT] = LmotorVal;
+		motor[MOTOR_PORT_RIGHT] = RmotorVal;
+		if (l_pos > (5.0 * distance / 6.0)){
+			gSpeed = 30.0;
+		}
+		wait(0.01);
+	}
+	motor[MOTOR_PORT_LEFT] = 0;
+	motor[MOTOR_PORT_RIGHT] = 0;
+}
+void TaskTurnEast(int orientation) {
+	switch(orientation) {
+		case 0:
+		  TaskTurnEncoder(90);
+		  break;
+		case 1:
+		  TaskTurnEncoder(45);
+		  break;
+		case 2:
+		  break;
+		case 3:
+		  TaskTurnEncoder(-45);
+		  break;
+		case 4:
+		  TaskTurnEncoder(-90);
+		  break;
+		case 5:
+		  TaskTurnEncoder(-135);
+		  break;
+		case 6:
+		  TaskTurnEncoder(-180);
+		  break;
+		case 7:
+		  TaskTurnEncoder(135);
+		  break;
+	}
+	return;
 }
